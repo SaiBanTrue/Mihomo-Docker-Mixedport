@@ -2,7 +2,7 @@
 
 set -e
 
-source /app/dir_init.sh
+source /app/app_init.sh
 
 source /app/config_update.sh
 
