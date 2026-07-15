@@ -88,8 +88,10 @@ docker run -d \
 | `MIHOMO_MODE` | 无 | 运行模式（可选：`Rule`, `Global`, `Direct`）。 |
 | `BIND_ADDRESS` | 无 | 局域网监听地址（通常配合 `ALLOW_LAN=true` 设置为 `0.0.0.0`）。 |
 | `AUTHENTICATION` | 无 | 代理身份验证。多账号需要用逗号分隔（例如：`"user1:pwd1,user2:pwd2"`）。 |
+| `SKIP_AUTH_PREFIXES` | 无 | 免身份验证的网段范围。多网段需要用逗号分隔（例如：`127.0.0.1/8,::1/128`）。 |
 | `WEBUI_LISTEN_ADDR`| `0.0.0.0:9090` | Web UI 控制面板的外部监听地址与端口。 |
 | `WEBUI_SECRET` | 随机生成 | Web UI 控制面板的访问密钥。默认随机生成，随机生成的密钥需查看日志获取。 |
+| `WEBUI_OVERWRITE` | `true` | 是否在启动时强制覆盖重置 Web UI 控制面板资源（可选：`true` / `false`）。 |
 
 ---
 
@@ -102,5 +104,5 @@ docker run -d \
 ├── WEBUI/                      # Metacubexd 前端控制面板
 └── history/                    # 历史配置备份目录
     ├── config_*.yaml           # 成功更新前的历史备份
-    └── config_*_failed_*.yaml  # 下载失败的损坏配置归档（用于排查）
+    └── config_*_failed_*.yaml  # 下载失败的损坏配置归档
 ```
