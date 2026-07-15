@@ -4,12 +4,39 @@ set -e
 
 chmod +x /app/mihomo
 
-SOURCE_DIR="/app/res"
-TARGET_DIR="/config"
+RETRY_COUNT=0
+MAX_RETRIES=3
+RESOURCE_DIR="/app/res"
 
-mkdir -p "$TARGET_DIR"
+CONFIG_DIR="/config"
+WEBUI_DIR="$CONFIG_DIR/WEBUI"
+CONFIG_FILE="$CONFIG_DIR/config.yaml"
 
-if [ -d "$SOURCE_DIR" ]; then
-    [ ! -d "$TARGET_DIR/WEBUI" ] && cp -rf "$SOURCE_DIR/WEBUI" "$TARGET_DIR/"
-    cp -run "$SOURCE_DIR"/geoip.metadb "$SOURCE_DIR"/geosite.dat "$TARGET_DIR/"
+mkdir -p "$CONFIG_DIR"
+
+if [ "$WEBUI_OVERWRITE" != "false" ]; then
+    rm -rf "$WEBUI_DIR"
+    cp -rf "$RESOURCE_DIR/WEBUI" "$CONFIG_DIR/"
 fi
+
+for item in "$RESOURCE_DIR"/*; do
+    name=$(basename "$item")
+    [ "$name" != "WEBUI" ] && cp -rfu "$item" "$CONFIG_DIR/"
+done
+
+[ -z "$WEBUI_LISTEN_ADDR" ] && WEBUI_LISTEN_ADDR="0.0.0.0:9090"
+
+if [ -z "$WEBUI_SECRET" ]; then
+    WEBUI_SECRET=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 8)
+    echo "***************************************************"
+    echo " Generated Web UI password: $WEBUI_SECRET"
+    echo "***************************************************"
+fi
+
+API_ADDR="${WEBUI_LISTEN_ADDR/0.0.0.0/127.0.0.1}"
+
+export WEBUI_LISTEN_ADDR
+export WEBUI_SECRET
+export API_ADDR
+
+echo "====> Environment initialization completed."
