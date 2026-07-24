@@ -47,6 +47,8 @@ jobs:
           file: ./Dockerfile
           push: true
           platforms: linux/amd64
+          provenance: false
+          sbom: false
           tags: |
             ${{ steps.meta.outputs.image_name }}:latest
             ${{ steps.meta.outputs.image_name }}:${{ github.sha }}
