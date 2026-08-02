@@ -23,7 +23,26 @@ if [[ -n "$SUB_URL" && "$SUB_URL" == http?(s)://* ]]; then
     mkdir -p "$HISTORY_DIR"
 
     for ua in "${USER_AGENTS[@]}"; do
-        curl -s -L --connect-timeout 30 -m 30 -H "User-Agent: $ua" "$SUB_URL" -o "$TEMP_CONFIG_FILE"
+        if [ "$USE_PROXYSCOTCH" = "true" ]; then
+            echo "====> Downloading via Proxyscotch..."
+            PAYLOAD="{\"url\":\"$SUB_URL\",\"method\":\"GET\",\"wantsBinary\":true,\"headers\":{\"User-Agent\":\"$ua\"}}"
+
+            RESPONSE=$(curl -s -L --noproxy "*" --connect-timeout 10 -m 10 --retry 3 \
+                -X POST "https://proxy.hoppscotch.io/" \
+                -H "Content-Type: application/json" \
+                -H "Origin: https://hoppscotch.io" \
+                -d "$PAYLOAD") || echo "====> Config download failed."
+
+            B64_DATA=$(echo "$RESPONSE" | sed -n 's/.*"data":"\([^"]*\)".*/\1/p')
+
+            MOD=$((${#B64_DATA} % 4))
+            [ "$MOD" -eq 2 ] && B64_DATA="${B64_DATA}=="
+            [ "$MOD" -eq 3 ] && B64_DATA="${B64_DATA}="
+            echo "$B64_DATA" | base64 -d > "$TEMP_CONFIG_FILE" 2>/dev/null || touch "$TEMP_CONFIG_FILE"
+        else
+            echo "====> Downloading via direct curl..."
+            curl -s -L --noproxy "*" --connect-timeout 10 -m 10 --retry 3 -H "User-Agent: $ua" "$SUB_URL" -o "$TEMP_CONFIG_FILE" || echo "====> Config download failed."
+        fi
 
         if ! /app/mihomo -t -d "$CONFIG_DIR" -f "$TEMP_CONFIG_FILE" >/dev/null 2>&1; then
             SAFE_UA=${ua// /_}
