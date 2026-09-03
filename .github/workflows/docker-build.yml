@@ -25,6 +25,7 @@ jobs:
         uses: actions/checkout@v4
 
       # 检查上游更新
+# 检查上游更新
       - name: Check upstream updates
         id: check_upstream
         env:
@@ -52,7 +53,14 @@ jobs:
 
           IMAGE_NAME="ghcr.io/${{ github.repository_owner }}/mihomo"
           echo "image_name=${IMAGE_NAME,,}" >> $GITHUB_OUTPUT
-
+          
+          # 如果是手动触发或代码 Push，则强制构建，不检测重复
+          if [ "${{ github.event_name }}" != "schedule" ]; then
+            echo "⚡ 触发事件为 ${{ github.event_name }}，跳过重复检查，强制执行构建！"
+            echo "trigger_build=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
           # 3. 检查当前用户的 GHCR 中是否已经发布过带有该 VERSION_TAG 的版本
           # 调用 GitHub Packages REST API 查询已有的版本 tag
           OWNER="${{ github.repository_owner }}"
