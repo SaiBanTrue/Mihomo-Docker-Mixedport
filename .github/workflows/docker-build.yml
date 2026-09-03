@@ -15,11 +15,7 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
-  
-permissions:
-  contents: read
-  packages: write
-  
+
 jobs:
   check-and-build:
     runs-on: ubuntu-latest
@@ -38,7 +34,7 @@ jobs:
           # 1. 获取 mihomo 最新稳定 Release 标签
           MIHOMO_TAG=$(curl -s -H "Authorization: token $GH_TOKEN" \
             "https://api.github.com/repos/MetaCubeX/mihomo/releases/latest" | jq -r '.tag_name')
-          
+          MIHOMO_TAG="v9.9.9-test"
           # 2. 获取 metacubexd 的 gh-pages 分支最新提交 Commit SHA (截取前7位)
           METACUBEXD_SHA=$(curl -s -H "Authorization: token $GH_TOKEN" \
             "https://api.github.com/repos/MetaCubeX/metacubexd/commits/gh-pages" | jq -r '.sha[0:7]')
@@ -59,11 +55,11 @@ jobs:
           echo "image_name=${IMAGE_NAME,,}" >> $GITHUB_OUTPUT
           
           # 如果是手动触发或代码 Push，则强制构建，不检测重复
-          if [ "${{ github.event_name }}" != "schedule" ]; then
-            echo "⚡ 触发事件为 ${{ github.event_name }}，跳过重复检查，强制执行构建！"
-            echo "trigger_build=true" >> $GITHUB_OUTPUT
-            exit 0
-          fi
+          #if [ "${{ github.event_name }}" != "schedule" ]; then
+          #  echo "⚡ 触发事件为 ${{ github.event_name }}，跳过重复检查，强制执行构建！"
+          #  echo "trigger_build=true" >> $GITHUB_OUTPUT
+          #  exit 0
+          #fi
           
           # 3. 检查当前用户的 GHCR 中是否已经发布过带有该 VERSION_TAG 的版本
           # 调用 GitHub Packages REST API 查询已有的版本 tag
