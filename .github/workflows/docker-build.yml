@@ -19,9 +19,7 @@ concurrency:
 jobs:
   check-and-build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write  # 显式声明允许向 GHCR 写入镜像
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -32,19 +30,21 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # 获取 mihomo 最新稳定 Release 标签
-          MIHOMO_TAG=$(curl -s "https://api.github.com/repos/MetaCubeX/mihomo/releases/latest" | jq -r '.tag_name')
+          # 1. 获取 mihomo 最新稳定 Release 标签
+          MIHOMO_TAG=$(curl -s -H "Authorization: token $GH_TOKEN" \
+            "https://api.github.com/repos/MetaCubeX/mihomo/releases/latest" | jq -r '.tag_name')
           
-          # 获取 metacubexd 的 gh-pages 分支最新提交 Commit SHA
-          METACUBEXD_SHA=$(curl -s "https://api.github.com/repos/MetaCubeX/metacubexd/commits/gh-pages" | jq -r '.sha[0:7]')
+          # 2. 获取 metacubexd 的 gh-pages 分支最新提交 Commit SHA (截取前7位)
+          METACUBEXD_SHA=$(curl -s -H "Authorization: token $GH_TOKEN" \
+            "https://api.github.com/repos/MetaCubeX/metacubexd/commits/gh-pages" | jq -r '.sha[0:7]')
 
-          if [ "$MIHOMO_TAG" = "null" ] || [ -z "$MIHOMO_TAG" ]; then
-            echo "无法获取 mihomo 最新版本，跳过检查"
+          if [ "$MIHOMO_TAG" = "null" ] || [ -z "$MIHOMO_TAG" ] || [ "$METACUBEXD_SHA" = "null" ] || [ -z "$METACUBEXD_SHA" ]; then
+            echo "❌ 获取上游版本信息失败，终止任务。"
             exit 1
           fi
 
-          echo "上游 mihomo 最新稳定版: $MIHOMO_TAG"
-          echo "上游 metacubexd 最新 Commit: $METACUBEXD_SHA"
+          echo "✅ 上游 mihomo 最新稳定版: $MIHOMO_TAG"
+          echo "✅ 上游 metacubexd 最新 Commit: $METACUBEXD_SHA"
 
           # 设定版本复合标签
           VERSION_TAG="${MIHOMO_TAG}-${METACUBEXD_SHA}"
@@ -53,21 +53,18 @@ jobs:
           IMAGE_NAME="ghcr.io/${{ github.repository_owner }}/mihomo"
           echo "image_name=${IMAGE_NAME,,}" >> $GITHUB_OUTPUT
 
-          # 如果是手动触发或代码 Push，则强制构建，不检测重复
-          if [ "${{ github.event_name }}" != "schedule" ]; then
-            echo "trigger_build=true" >> $GITHUB_OUTPUT
-            exit 0
-          fi
+          # 3. 检查当前用户的 GHCR 中是否已经发布过带有该 VERSION_TAG 的版本
+          # 调用 GitHub Packages REST API 查询已有的版本 tag
+          OWNER="${{ github.repository_owner }}"
+          EXISTS=$(curl -s -H "Authorization: token $GH_TOKEN" \
+            "https://api.github.com/users/${OWNER}/packages/container/mihomo/versions?per_page=100" \
+            | jq -r ".[].metadata.container.tags[]?" | grep -Fx "$VERSION_TAG" || true)
 
-          # 定时任务触发时：检查 GHCR 中是否已经存在该复合标签的镜像
-          EXISTS=$(curl -s -H "Authorization: Bearer $(echo -n ${{ secrets.GITHUB_TOKEN }} | base64)" \
-            "https://ghcr.io/v2/${{ github.repository_owner }}/mihomo/manifests/${VERSION_TAG}" | grep -c "schemaVersion" || true)
-
-          if [ "$EXISTS" -gt 0 ]; then
-            echo "上游均无新版本，当前版本 ${VERSION_TAG} 已构建，跳过任务。"
+          if [ -n "$EXISTS" ]; then
+            echo "ℹ️ 上游未发布新版本，当前复合版本 [${VERSION_TAG}] 已存在于 GHCR 中，跳过构建。"
             echo "trigger_build=false" >> $GITHUB_OUTPUT
           else
-            echo "发现新版本: ${VERSION_TAG}，开始构建！"
+            echo "🚀 发现上游有新版本（或镜像尚未构建）: [${VERSION_TAG}]，开始执行构建！"
             echo "trigger_build=true" >> $GITHUB_OUTPUT
           fi
 
