@@ -19,7 +19,9 @@ concurrency:
 jobs:
   check-and-build:
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: read
+      packages: write  # 显式声明允许向 GHCR 写入镜像
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
