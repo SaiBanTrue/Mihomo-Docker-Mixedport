@@ -27,7 +27,6 @@ jobs:
         uses: actions/checkout@v4
 
       # 检查上游更新
-# 检查上游更新
       - name: Check upstream updates
         id: check_upstream
         env:
@@ -37,7 +36,7 @@ jobs:
           MIHOMO_TAG=$(curl -s -H "Authorization: token $GH_TOKEN" \
             "https://api.github.com/repos/MetaCubeX/mihomo/releases/latest" | jq -r '.tag_name')
 
-# 2. 获取 zashboard 最新稳定 Release 标签
+          # 2. 获取 zashboard 最新稳定 Release 标签
           ZASHBOARD_TAG=$(curl -s -H "Authorization: token $GH_TOKEN" \
             "https://api.github.com/repos/Zephyruso/zashboard/releases/latest" | jq -r '.tag_name')
 
