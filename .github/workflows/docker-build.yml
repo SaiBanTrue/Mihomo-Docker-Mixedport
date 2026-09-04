@@ -37,20 +37,20 @@ jobs:
           MIHOMO_TAG=$(curl -s -H "Authorization: token $GH_TOKEN" \
             "https://api.github.com/repos/MetaCubeX/mihomo/releases/latest" | jq -r '.tag_name')
 
-# 2. 获取 zashboard 最新稳定 Release 标签
-          ZASHBOARD_TAG=$(curl -s -H "Authorization: token $GH_TOKEN" \
-            "https://api.github.com/repos/Zephyruso/zashboard/releases/latest" | jq -r '.tag_name')
+          # 2. 获取 metacubexd 的 gh-pages 分支最新提交 Commit SHA (截取前7位)
+          METACUBEXD_SHA=$(curl -s -H "Authorization: token $GH_TOKEN" \
+            "https://api.github.com/repos/MetaCubeX/metacubexd/commits/gh-pages" | jq -r '.sha[0:7]')
 
-          if [ "$MIHOMO_TAG" = "null" ] || [ -z "$MIHOMO_TAG" ] || [ "$ZASHBOARD_TAG" = "null" ] || [ -z "$ZASHBOARD_TAG" ]; then
+          if [ "$MIHOMO_TAG" = "null" ] || [ -z "$MIHOMO_TAG" ] || [ "$METACUBEXD_SHA" = "null" ] || [ -z "$METACUBEXD_SHA" ]; then
             echo "❌ 获取上游版本信息失败，终止任务。"
             exit 1
           fi
 
           echo "✅ 上游 mihomo 最新稳定版: $MIHOMO_TAG"
-          echo "✅ 上游 zashboard 最新稳定版: $ZASHBOARD_TAG"
+          echo "✅ 上游 metacubexd 最新 Commit: $METACUBEXD_SHA"
 
           # 设定版本复合标签
-          VERSION_TAG="${MIHOMO_TAG}-${ZASHBOARD_TAG}"
+          VERSION_TAG="${MIHOMO_TAG}-${METACUBEXD_SHA}"
           echo "version_tag=$VERSION_TAG" >> $GITHUB_OUTPUT
 
           IMAGE_NAME="ghcr.io/${{ github.repository_owner }}/mihomo"
