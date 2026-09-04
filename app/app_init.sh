@@ -28,10 +28,12 @@ done
 
 [ -z "$WEBUI_LISTEN_ADDR" ] && WEBUI_LISTEN_ADDR="0.0.0.0:9090"
 
-if [ -z "$WEBUI_SECRET" ]; then
-    WEBUI_SECRET=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 8)
+if [ -z "$WEBUI_SECRET" ] || [ "$WEBUI_SECRET" = "none" ]; then
+    WEBUI_SECRET=""
+    echo "====> Web UI authentication is DISABLED."
+else
     echo "***************************************************"
-    echo " Generated Web UI password: $WEBUI_SECRET"
+    echo " Web UI password set: $WEBUI_SECRET"
     echo "***************************************************"
 fi
 
