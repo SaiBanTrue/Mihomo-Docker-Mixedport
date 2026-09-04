@@ -6,7 +6,7 @@ LATEST_TAG=$(curl -s https://api.github.com/repos/MetaCubeX/mihomo/releases/late
 MIHOMO_URL="https://github.com/MetaCubeX/mihomo/releases/download/${LATEST_TAG}/mihomo-linux-arm64-${LATEST_TAG}.gz"
 METADB_URL="https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.metadb"
 GEOSITE_URL="https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat"
-WEBUI_URL="https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip"
+WEBUI_URL="https://github.com/Zephyruso/zashboard/releases/latest/download/dist.zip"
 
 APP_DIR="./app"
 RES_DIR="$APP_DIR/res"
@@ -24,9 +24,8 @@ rm -f "$APP_DIR/mihomo.gz"
 
 echo "====> [3/4] Downloading and deploying Web UI..."
 curl -L -o "$RES_DIR/ui.zip" "$WEBUI_URL"
-unzip -q "$RES_DIR/ui.zip" -d "$RES_DIR"
-EXTRACTED_UI_DIR=$(find "$RES_DIR" -maxdepth 1 -mindepth 1 -type d | head -n 1)
-mv "$EXTRACTED_UI_DIR" "$RES_DIR/WEBUI"
+mkdir -p "$RES_DIR/WEBUI"
+unzip -q -o "$RES_DIR/ui.zip" -d "$RES_DIR/WEBUI"
 rm -f "$RES_DIR/ui.zip"
 
 echo "====> [4/4] Pre-build process completed successfully."
