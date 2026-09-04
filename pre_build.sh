@@ -24,8 +24,14 @@ rm -f "$APP_DIR/mihomo.gz"
 
 echo "====> [3/4] Downloading and deploying Web UI..."
 curl -L -o "$RES_DIR/ui.zip" "$WEBUI_URL"
+mkdir -p "$RES_DIR/temp_ui"
+unzip -q -o "$RES_DIR/ui.zip" -d "$RES_DIR/temp_ui"
 mkdir -p "$RES_DIR/WEBUI"
-unzip -q -o "$RES_DIR/ui.zip" -d "$RES_DIR/WEBUI"
-rm -f "$RES_DIR/ui.zip"
+
+# 将 dist 内部的所有静态资源直接移入 WEBUI 根目录
+mv "$RES_DIR/temp_ui/dist/"* "$RES_DIR/WEBUI/"
+
+# 清理无用的临时文件和目录
+rm -rf "$RES_DIR/temp_ui" "$RES_DIR/ui.zip"
 
 echo "====> [4/4] Pre-build process completed successfully."
