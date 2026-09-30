@@ -24,7 +24,7 @@ jobs:
         packages: write  # 显式声明允许向 GHCR 推送镜像
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # 检查上游更新
       - name: Check upstream updates
@@ -83,11 +83,11 @@ jobs:
 
       - name: Set up Docker Buildx
         if: steps.check_upstream.outputs.trigger_build == 'true'
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Log in to GHCR
         if: steps.check_upstream.outputs.trigger_build == 'true'
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -95,7 +95,7 @@ jobs:
 
       - name: Build and push Docker image
         if: steps.check_upstream.outputs.trigger_build == 'true'
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ./Dockerfile
